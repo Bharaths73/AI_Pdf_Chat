@@ -36,9 +36,12 @@ function Upload() {
     }
 
   return (
-    <div className='flex flex-col justify-center items-center gap-y-7 bg-gray-900 w-[60%] border border-gray-600 py-9 cursor-pointer rounded-lg' onClick={handleFileUpload}>
-       <FaUpload className='text-gray-400 text-5xl'/>
-       <button className='text-base bg-amber-300 text-black w-[70%] py-2 px-5 border-gray-950 rounded-md cursor-pointer font-bold'>Upload</button>
+    <div className='flex flex-col justify-center items-center lg:gap-y-7 gap-y-4 bg-gray-900 w-[60%] border border-gray-600 lg:py-9 py-3 cursor-pointer rounded-lg' onClick={handleFileUpload}>
+       <FaUpload className='text-gray-400 lg:text-5xl text-2xl lg:block hidden'/>
+       <button className='text-base bg-amber-300 text-black w-[70%] lg:py-2 py-1.5 px-5 border-gray-950 rounded-md cursor-pointer font-bold flex gap-x-4 items-center justify-center'>
+        Upload
+        <FaUpload className='text-black font-bold lg:text-5xl text-xl lg:hidden block'/>
+       </button>
     </div>
   )
 }
