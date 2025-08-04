@@ -6,6 +6,7 @@ import { ChatGroq } from "@langchain/groq";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import 'dotenv/config'
 
 const queue=new Queue('pdf-queue',{
@@ -35,8 +36,11 @@ app.use(cors({
 
 app.use(express.json());
 
-app.get('/',(req,res)=>{
-    console.log("Healthy");
+app.get('/health',(req,res)=>{
+    return res.status(200).json({
+        success:true,
+        message:"Server is running"
+    })
 })
 
 app.post('/upload/pdf',upload.single('pdf'),async(req,res)=>{
@@ -73,6 +77,8 @@ app.post('/chat',async(req,res)=>{
         model: "text-embedding-004",
       })
 
+    const parser=new StringOutputParser();
+
     const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
           url: 'http://localhost:6333',
           collectionName: "pdf-collection",
@@ -88,35 +94,32 @@ app.post('/chat',async(req,res)=>{
     });
 
     const prompt=PromptTemplate.fromTemplate(`
-         You are a helpful assistant. Use the following transcript as the only context to answer the user's question accurately.
-            Transcript:{transcript}
-            User question:{question}
-            Answer the question based solely on the transcript above. If the transcript does not contain the answer, reply: "Sorry, I don't have that information."
+         You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
+        Question: {question} 
+        Context: {context} 
+        Answer:
         `
     )
+
+    //Filter, re-rank, query optimization or compress retrieved results as needed.
 
     const similar_docs=await retriever.invoke(message)
 
     const filtered_docs = similar_docs.map(doc => doc.pageContent).join(' ');
 
-    console.log("similar docs are ",filtered_docs);
-
     const final_prompt=await prompt.invoke({
-        transcript: filtered_docs,
+        context: filtered_docs,
         question: message
     })
-
-    console.log("Final prompt is ",final_prompt);
     
-
     const response=await model.invoke(final_prompt)
 
-    console.log(response.content);
+    const parsed_output=await parser.parse(response.content)
     
     return res.status(200).json({
         success: true,
         message: "Chat response",
-        data: response.content
+        data: parsed_output
     });
 })
 
