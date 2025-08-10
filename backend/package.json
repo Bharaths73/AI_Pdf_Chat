@@ -19,6 +19,7 @@
     "@langchain/google-genai": "^0.2.16",
     "@langchain/groq": "^0.2.3",
     "@langchain/qdrant": "^0.1.2",
+    "backend": "file:",
     "bullmq": "^5.56.9",
     "chromadb": "^3.0.10",
     "cors": "^2.8.5",
